@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StyleKart — Fashion with a Super Agent</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ REVIEW TOOLS STRIP ============ -->
+<div class="review-strip">
+  <span>🎓 Review 2 prototype</span>
+  <div class="review-links">
+    <button id="strip-data" onclick="switchScreen('data')">🗂️ Data Studio</button>
+    <button id="strip-lab"  onclick="switchScreen('lab')">🧪 Agent Lab</button>
+    <button id="strip-how"  onclick="switchScreen('how')">⚙️ How it works</button>
+  </div>
+  <span class="data-version">dataset <b id="dvBadgeStrip">v1</b></span>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="topbar">
+  <div class="brand" onclick="goShop('All')">Style<span>Kart</span></div>
+
+  <nav class="cat-nav">
+    <button onclick="goShop('Men')">Men</button>
+    <button onclick="goShop('Women')">Women</button>
+    <button onclick="goShop('Kids')">Kids</button>
+    <button onclick="goShop('Footwear')">Footwear</button>
+    <button onclick="goShop('Accessories')">Accessories</button>
+  </nav>
+
+  <div class="searchbox">
+    <span>🔎</span>
+    <input id="searchInput" type="text" placeholder="Search for brands, jackets, dresses..."
+           oninput="onSearch(this.value)">
+  </div>
+
+  <div class="header-icons">
+    <button class="icon-btn" id="nav-wishlist" onclick="switchScreen('wishlist')">
+      <span>🤍</span>Wishlist<b class="count-badge" id="wishBadge">0</b>
+    </button>
+    <button class="icon-btn" id="nav-cart" onclick="switchScreen('cart')">
+      <span>👜</span>Bag<b class="count-badge" id="cartBadge">0</b>
+    </button>
+  </div>
+</header>
+
+<!-- ============ SALE BANNER ============ -->
+<div class="sale-banner" onclick="askDeals()">
+  ✨ END OF SEASON SALE — up to <b>50% OFF</b> · ask StyleBot for <u>today's offers</u> ✨
+</div>
+
+<!-- ============ SHOP SCREEN ============ -->
+<main id="screen-shop" class="screen shop-layout">
+  <aside class="filters">
+    <h3>FILTERS <button class="clear-btn" onclick="clearFilters()">CLEAR ALL</button></h3>
+
+    <div class="f-group">
+      <h4>Categories</h4>
+      <div id="filterCats"></div>
+    </div>
+
+    <div class="f-group">
+      <h4>Brand</h4>
+      <div id="filterBrands"></div>
+    </div>
+
+    <div class="f-group">
+      <h4>Price</h4>
+      <div id="filterPrice"></div>
+    </div>
+
+    <div class="f-group">
+      <h4>Discount</h4>
+      <div id="filterDiscount"></div>
+    </div>
+
+    <div class="f-group">
+      <h4>Customer Rating</h4>
+      <div id="filterRating"></div>
+    </div>
+  </aside>
+
+  <section class="shop-main">
+    <div class="toolbar">
+      <div class="crumb" id="resultInfo">Home / All</div>
+      <label class="sort-wrap">Sort by:
+        <select id="sortSelect" onchange="onSort(this.value)">
+          <option value="popular">Recommended</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="rating">Customer Rating</option>
+          <option value="discount">Better Discount</option>
+        </select>
+      </label>
+    </div>
+    <div class="grid" id="productGrid"></div>
+    <p class="empty-note" id="noResults" style="display:none">No products matched. Try different filters, or ask StyleBot.</p>
+  </section>
+</main>
+
+<!-- ============ WISHLIST SCREEN ============ -->
+<main id="screen-wishlist" class="screen" style="display:none">
+  <h2 class="screen-title">My Wishlist <span class="title-sub" id="wishCount"></span></h2>
+  <div class="grid" id="wishlistGrid"></div>
+  <p class="empty-note" id="wishEmpty">Nothing here yet. Tap the 🤍 on any product to save it.</p>
+</main>
+
+<!-- ============ BAG / CART SCREEN ============ -->
+<main id="screen-cart" class="screen" style="display:none">
+  <h2 class="screen-title">Shopping Bag</h2>
+  <div id="cartContent"></div>
+  <div id="orderConfirm" style="display:none"></div>
+</main>
+
+<!-- ============ AGENT LAB (accuracy) SCREEN ============ -->
+<main id="screen-lab" class="screen" style="display:none">
+  <h2 class="screen-title">🧪 Agent Lab — accuracy evaluation</h2>
+  <p class="screen-desc">A fixed test dataset of <b>31 real user queries</b>, each labelled with the agent it should route to.
+  Press run: every query goes through the live <code>superAgentRoute()</code> and the result is compared with the label.
+  Two queries are known vocabulary gaps and are expected to fail — see <a href="#" onclick="switchScreen('how');return false">How it works → Limitations</a>.</p>
+  <button class="btn btn-primary" onclick="runAccuracyTest()">▶ Run accuracy test</button>
+  <div id="labResults"></div>
+</main>
+
+<!-- ============ DATA STUDIO SCREEN ============ -->
+<main id="screen-data" class="screen" style="display:none">
+  <h2 class="screen-title">🗂️ Data Studio — the live dataset</h2>
+  <p class="screen-desc">This is the exact data every agent reads when it answers — edit any cell and the change is
+  <b>instantly visible to the agents</b>. Each edit bumps the dataset version, and every chat reply prints the version
+  it answered from.<br><b>Try it:</b> set the Denim Jacket's stock to <b>0</b>, open StyleBot and ask
+  <i>"is the denim jacket in stock?"</i>.</p>
+  <div class="data-actions">
+    <span class="data-version big">Current dataset: <b id="dvBadge">v1</b></span>
+    <button class="btn btn-ghost" onclick="resetDataset()">↩ Reset to original</button>
+  </div>
+  <div class="data-table-wrap">
+    <table class="data-table" id="dataTable"></table>
+  </div>
+  <h3 class="log-title">Edit log</h3>
+  <ul class="edit-log" id="editLog"><li class="log-empty">No edits yet this session.</li></ul>
+</main>
+
+<!-- ============ HOW IT WORKS SCREEN ============ -->
+<main id="screen-how" class="screen" style="display:none">
+  <h2 class="screen-title">⚙️ How the Super Agent works</h2>
+
+  <div class="how-pipeline">
+    <div class="pipe-step"><b>1 · Message</b><p>You type one request in the chat.</p></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><b>2 · Intent detection</b><p>The Super Agent scans it for keywords, order ids and product names.</p></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><b>3 · Routing</b><p>A priority table picks ONE of the six specialized agents.</p></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><b>4 · Live data read</b><p>That agent reads the dataset at that moment (see Data Studio).</p></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><b>5 · Reply + proof</b><p>The answer carries a routing tag, an intent trace and the dataset version.</p></div>
+  </div>
+
+  <h3>The routing priority table</h3>
+  <p class="screen-desc">Rules are checked top to bottom; the first match wins. Higher rules are more "urgent" —
+  a return request mentioning an order id must reach Support, not Order Tracking.</p>
+  <table class="how-table">
+    <tr><th>#</th><th>If the message has…</th><th>Routed to</th><th>Example</th></tr>
+    <tr><td>1</td><td>return · refund · cancel · exchange · damaged · wrong size · payment failed</td><td>🎧 Customer Support</td><td>"cancel order ORD1003"</td></tr>
+    <tr><td>2</td><td>an order id (ORD…) · track · order status · where is my order</td><td>📦 Order Tracking</td><td>"track ORD1001"</td></tr>
+    <tr><td>3</td><td>price · compare · cheapest · cost · offer · deal · sale · discount</td><td>💰 Price Comparison</td><td>"any offers today?"</td></tr>
+    <tr><td>4</td><td>recommend · suggest · best · gift · what should</td><td>⭐ Recommendation</td><td>"recommend a dress"</td></tr>
+    <tr><td>5</td><td>stock · available · inventory · how many · left</td><td>📊 Inventory</td><td>"is the denim jacket in stock?"</td></tr>
+    <tr><td>6</td><td>any product, brand or category name</td><td>🔎 Product Discovery</td><td>"show me jeans"</td></tr>
+    <tr><td>7</td><td>help · support · contact · human</td><td>🎧 Customer Support</td><td>"I need help"</td></tr>
+    <tr><td>8</td><td>a greeting, or nothing recognizable</td><td>🤖 Super Agent itself</td><td>"hello" / fallback</td></tr>
+  </table>
+
+  <h3>How product matching works</h3>
+  <ul class="how-list">
+    <li>Each product carries a keyword list ("jacket", "denim jacket", brand names, its category).</li>
+    <li>Matching is <b>whole-word</b>, so "headphones" can never match a "phone" keyword by substring.</li>
+    <li>Matches are <b>scored</b>: an exact phrase ("denim jacket") outranks a single shared word ("denim"), so the jacket wins over jeans.</li>
+  </ul>
+
+  <h3>How we know answers come from the data (grounding)</h3>
+  <ul class="how-list">
+    <li>Agents hold no answers of their own — every number (price, stock, status) is read from the dataset at reply time.</li>
+    <li>Edit anything in <b>Data Studio</b> and the dataset version bumps (v1 → v2…). Every chat reply prints the version it used.</li>
+    <li>Live demo: change a stock to 0, ask the agent, watch the answer flip to "out of stock" — same question, new data.</li>
+  </ul>
+
+  <h3 class="limit-title">Limitations (honest ones — good viva material)</h3>
+  <ul class="how-list limits">
+    <li><b>Vocabulary gaps.</b> Routing is keyword-based. "How much is the summer dress" misses because "how much" isn't in the price keyword list; "my package hasn't arrived" misses because we only listen for "order"/"track". Both are left in the Agent Lab test set as failures on purpose.</li>
+    <li><b>No conversation memory.</b> Each message is routed on its own. After "show me jeans", asking "which is cheapest?" won't remember you meant jeans.</li>
+    <li><b>First-match ambiguity.</b> If a sentence genuinely fits two intents, the priority table decides — it can't weigh context like a human would.</li>
+    <li><b>English keywords only.</b> Hinglish or typos ("recomend") fall to the fallback reply.</li>
+    <li><b>Session-only data.</b> The dataset lives in the browser; a refresh resets Data Studio edits. The cloud phase (slide 3) moves it to a real database.</li>
+    <li><b>Measured accuracy: 29/31 ≈ 93.5%</b> on the routing test set — run it yourself in the Agent Lab.</li>
+  </ul>
+
+  <h3>Planned upgrades (the cloud phase from slide 3)</h3>
+  <ul class="how-list">
+    <li>Swap the keyword router for an <b>LLM API call</b> — fixes vocabulary gaps and adds memory; the six agents and this UI stay the same.</li>
+    <li>Move the dataset to a <b>cloud database</b> so edits persist and all users see the same stock.</li>
+    <li>Host the site on a cloud service; put the agents behind an <b>API</b> for scalability and reliability.</li>
+  </ul>
+</main>
+
+<!-- ============ CHAT DRAWER (Myntra-style side panel) ============ -->
+<div class="chat-overlay" id="chatOverlay" onclick="closeChat()"></div>
+<aside class="chat-drawer" id="chatDrawer">
+  <div class="chat-head">
+    <div>
+      <b>🤖 StyleBot</b>
+      <small>Super Agent · routes to 6 specialists · dataset <span id="dvBadgeChat">v1</span></small>
+    </div>
+    <button class="chat-close" onclick="closeChat()">✕</button>
+  </div>
+
+  <div class="agent-strip">
+    <span title="Product Discovery Agent">🔎</span>
+    <span title="Recommendation Agent">⭐</span>
+    <span title="Price Comparison Agent">💰</span>
+    <span title="Order Tracking Agent">📦</span>
+    <span title="Customer Support Agent">🎧</span>
+    <span title="Inventory Agent">📊</span>
+  </div>
+
+  <div class="chat-window" id="chatWindow"></div>
+
+  <div class="quick-chips">
+    <button class="chip" onclick="sendMessage('Recommend a dress')">Recommend a dress</button>
+    <button class="chip" onclick="sendMessage('Any offers today?')">Today's offers</button>
+    <button class="chip" onclick="sendMessage('Compare prices for the denim jacket')">Compare jacket prices</button>
+    <button class="chip" onclick="sendMessage('Track order ORD1001')">Track ORD1001</button>
+    <button class="chip" onclick="sendMessage('Is the denim jacket in stock?')">Jacket in stock?</button>
+    <button class="chip" onclick="sendMessage('My t-shirt doesn\'t fit')">Wrong size</button>
+  </div>
+
+  <div class="chat-inputrow">
+    <input id="chatInput" type="text" placeholder="Ask StyleBot anything…"
+           onkeydown="if(event.key==='Enter') sendMessage()">
+    <button class="btn btn-primary" onclick="sendMessage()">➤</button>
+  </div>
+</aside>
+
+<!-- floating chat button -->
+<button class="fab" id="chatFab" onclick="openChat()">🤖<span>Ask StyleBot</span></button>
+
+<!-- ============ SIZE MODAL ============ -->
+<div class="modal-overlay" id="sizeModal" style="display:none" onclick="if(event.target===this) closeSizeModal()">
+  <div class="modal">
+    <div id="sizeModalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="art.js"></script>
+<script src="data.js"></script>
+<script src="agents.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
